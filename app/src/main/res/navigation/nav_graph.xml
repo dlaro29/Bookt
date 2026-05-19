@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/exploreFragment">
+
+    <fragment
+        android:id="@+id/exploreFragment"
+        android:name="com.example.bookt.ui.explore.ExploreFragment"
+        android:label="Esplora">
+
+        <action
+            android:id="@+id/action_exploreFragment_to_bookDetailFragment"
+            app:destination="@id/bookDetailFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/booksFragment"
+        android:name="com.example.bookt.ui.books.BooksFragment"
+        android:label="Libri" />
+
+    <fragment
+        android:id="@+id/accountFragment"
+        android:name="com.example.bookt.ui.account.AccountFragment"
+        android:label="Account" />
+
+    <fragment
+        android:id="@+id/bookDetailFragment"
+        android:name="com.example.bookt.ui.detail.BookDetailFragment"
+        android:label="Dettaglio libro" />
+</navigation>

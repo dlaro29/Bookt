@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "412197578713",
+    "project_id": "bookt-ec1fd",
+    "storage_bucket": "bookt-ec1fd.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:412197578713:android:98631024bae2c739675bc8",
+        "android_client_info": {
+          "package_name": "com.example.bookt"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC1XHG3OH3gvYN39LoClWZa-NJBkXaFILY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
