@@ -18,11 +18,13 @@ class AccountFragment : Fragment() {
 
     private var _binding: FragmentAccountBinding? = null
     private val binding get() = _binding!!
+
     private lateinit var storageManager: BookStorageManager
     private lateinit var favoritesAdapter: SavedBookAdapter
     private lateinit var readAdapter: SavedBookAdapter
     private lateinit var authManager: AuthManager
     private lateinit var firebaseStorageManager: FirebaseBookStorageManager
+
     private var pendingCloudLoads = 0
 
     override fun onCreateView(
@@ -154,27 +156,7 @@ class AccountFragment : Fragment() {
                 openBookDetail(selectedBook)
             },
             onRemoveClick = { selectedBook ->
-                if (authManager.isUserLoggedIn()) {
-                    firebaseStorageManager.saveBookStatus(
-                        book = selectedBook,
-                        inFavorites = false,
-                        onSuccess = {
-                            if (_binding != null && isAdded) {
-                                Toast.makeText(requireContext(), "Rimosso dai Preferiti", Toast.LENGTH_SHORT).show()
-                                loadSavedBooks()
-                            }
-                        },
-                        onError = { message ->
-                            if (_binding != null && isAdded) {
-                                Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
-                            }
-                        }
-                    )
-                } else {
-                    storageManager.removeFromFavorites(selectedBook.id)
-                    Toast.makeText(requireContext(), "Rimosso dai Preferiti", Toast.LENGTH_SHORT).show()
-                    loadSavedBooks()
-                }
+                removeFavoriteBook(selectedBook)
             }
         )
 
@@ -184,27 +166,7 @@ class AccountFragment : Fragment() {
                 openBookDetail(selectedBook)
             },
             onRemoveClick = { selectedBook ->
-                if (authManager.isUserLoggedIn()) {
-                    firebaseStorageManager.saveBookStatus(
-                        book = selectedBook,
-                        inRead = false,
-                        onSuccess = {
-                            if (_binding != null && isAdded) {
-                                Toast.makeText(requireContext(), "Rimosso dai Letti", Toast.LENGTH_SHORT).show()
-                                loadSavedBooks()
-                            }
-                        },
-                        onError = { message ->
-                            if (_binding != null && isAdded) {
-                                Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
-                            }
-                        }
-                    )
-                } else {
-                    storageManager.removeFromRead(selectedBook.id)
-                    Toast.makeText(requireContext(), "Rimosso dai Letti", Toast.LENGTH_SHORT).show()
-                    loadSavedBooks()
-                }
+                removeReadBook(selectedBook)
             }
         )
 
@@ -215,6 +177,58 @@ class AccountFragment : Fragment() {
         binding.rvReadBooks.layoutManager =
             androidx.recyclerview.widget.GridLayoutManager(requireContext(), 3)
         binding.rvReadBooks.adapter = readAdapter
+    }
+
+    private fun removeFavoriteBook(selectedBook: Book) {
+        if (authManager.isUserLoggedIn()) {
+            showAccountLoading()
+
+            firebaseStorageManager.saveBookStatus(
+                book = selectedBook,
+                inFavorites = false,
+                onSuccess = {
+                    if (_binding != null && isAdded) {
+                        Toast.makeText(requireContext(), "Rimosso dai Preferiti", Toast.LENGTH_SHORT).show()
+                        loadSavedBooks()
+                    }
+                },
+                onError = { message ->
+                    if (_binding != null && isAdded) {
+                        showAccountError(message)
+                    }
+                }
+            )
+        } else {
+            storageManager.removeFromFavorites(selectedBook.id)
+            Toast.makeText(requireContext(), "Rimosso dai Preferiti", Toast.LENGTH_SHORT).show()
+            loadSavedBooks()
+        }
+    }
+
+    private fun removeReadBook(selectedBook: Book) {
+        if (authManager.isUserLoggedIn()) {
+            showAccountLoading()
+
+            firebaseStorageManager.saveBookStatus(
+                book = selectedBook,
+                inRead = false,
+                onSuccess = {
+                    if (_binding != null && isAdded) {
+                        Toast.makeText(requireContext(), "Rimosso dai Letti", Toast.LENGTH_SHORT).show()
+                        loadSavedBooks()
+                    }
+                },
+                onError = { message ->
+                    if (_binding != null && isAdded) {
+                        showAccountError(message)
+                    }
+                }
+            )
+        } else {
+            storageManager.removeFromRead(selectedBook.id)
+            Toast.makeText(requireContext(), "Rimosso dai Letti", Toast.LENGTH_SHORT).show()
+            loadSavedBooks()
+        }
     }
 
     private fun openBookDetail(book: Book) {
@@ -253,13 +267,13 @@ class AccountFragment : Fragment() {
         firebaseStorageManager.getBooksByStatus(
             statusField = "inFavorites",
             onSuccess = { favoriteBooks ->
-                if (_binding != null) {
+                if (_binding != null && isAdded) {
                     updateFavoritesUi(favoriteBooks)
                     completeCloudLoad()
                 }
             },
             onError = { message ->
-                if (isAdded && _binding != null) {
+                if (_binding != null && isAdded) {
                     showAccountError(message)
                     completeCloudLoad()
                 }
@@ -269,13 +283,13 @@ class AccountFragment : Fragment() {
         firebaseStorageManager.getBooksByStatus(
             statusField = "inRead",
             onSuccess = { readBooks ->
-                if (_binding != null) {
+                if (_binding != null && isAdded) {
                     updateReadUi(readBooks)
                     completeCloudLoad()
                 }
             },
             onError = { message ->
-                if (isAdded && _binding != null) {
+                if (_binding != null && isAdded) {
                     showAccountError(message)
                     completeCloudLoad()
                 }
@@ -294,6 +308,8 @@ class AccountFragment : Fragment() {
     private fun updateFavoritesUi(favoriteBooks: List<Book>) {
         val safeBinding = _binding ?: return
 
+        safeBinding.tvAccountLoadStatus.visibility = View.GONE
+
         if (favoriteBooks.isEmpty()) {
             safeBinding.tvEmptyFavorites.visibility = View.VISIBLE
             safeBinding.rvFavoriteBooks.visibility = View.GONE
@@ -307,6 +323,8 @@ class AccountFragment : Fragment() {
 
     private fun updateReadUi(readBooks: List<Book>) {
         val safeBinding = _binding ?: return
+
+        safeBinding.tvAccountLoadStatus.visibility = View.GONE
 
         if (readBooks.isEmpty()) {
             safeBinding.tvEmptyRead.visibility = View.VISIBLE

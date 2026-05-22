@@ -7,7 +7,6 @@ import retrofit2.converter.gson.GsonConverterFactory
 object RetrofitInstance {
 
     private const val BASE_URL = "https://www.googleapis.com/books/v1/"
-
     val GOOGLE_BOOKS_API_KEY: String = BuildConfig.GOOGLE_BOOKS_API_KEY
 
     val api: GoogleBooksApi by lazy {

@@ -70,9 +70,9 @@ class BooksFragment : Fragment() {
     }
 
     private fun loadReadingBooks() {
-        if (authManager.isUserLoggedIn()) {
-            showLoading()
+        showReadingLoading()
 
+        if (authManager.isUserLoggedIn()) {
             firebaseStorageManager.getBooksByStatus(
                 statusField = "inReading",
                 onSuccess = { readingBooks ->
@@ -81,8 +81,8 @@ class BooksFragment : Fragment() {
                     }
                 },
                 onError = { message ->
-                    if (_binding != null && isAdded) {
-                        showError(message)
+                    if (isAdded && _binding != null) {
+                        showReadingError(message)
                     }
                 }
             )
@@ -126,6 +126,25 @@ class BooksFragment : Fragment() {
         }
     }
 
+    private fun showReadingLoading() {
+        val safeBinding = _binding ?: return
+
+        safeBinding.progressBarReading.visibility = View.VISIBLE
+        safeBinding.tvReadingStatus.visibility = View.GONE
+        safeBinding.tvEmptyReading.visibility = View.GONE
+        safeBinding.rvReadingBooks.visibility = View.GONE
+    }
+
+    private fun showReadingError(message: String) {
+        val safeBinding = _binding ?: return
+
+        safeBinding.progressBarReading.visibility = View.GONE
+        safeBinding.tvReadingStatus.visibility = View.VISIBLE
+        safeBinding.tvReadingStatus.text = message
+        safeBinding.tvEmptyReading.visibility = View.GONE
+        safeBinding.rvReadingBooks.visibility = View.GONE
+        readingBookAdapter.updateBooks(emptyList())
+    }
     private fun showLoading() {
         val safeBinding = _binding ?: return
 
