@@ -38,6 +38,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.example.bookt.data.model.Book
+import com.example.bookt.ui.theme.BooktFont
 
 @Composable
 fun BooksScreen(
@@ -57,10 +58,10 @@ fun BooksScreen(
                 .padding(horizontal = 18.dp, vertical = 18.dp)
         ) {
             Text(
-                text = "Da leggere",
+                text = "DA LEGGERE",
                 color = Color.White,
                 style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.ExtraBold
             )
 
             Spacer(modifier = Modifier.height(5.dp))
@@ -166,9 +167,10 @@ private fun ReadingBookCard(
             Text(
                 text = book.title,
                 color = Color.White,
+                fontFamily = BooktFont,
                 fontSize = 9.sp,
                 lineHeight = 10.sp,
-                fontWeight = FontWeight.Bold,
+                fontWeight = FontWeight.ExtraBold,
                 maxLines = 4,
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier

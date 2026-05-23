@@ -5,7 +5,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -19,6 +18,7 @@ import com.example.bookt.data.model.Book
 import com.example.bookt.data.repository.BookRepository
 import com.example.bookt.data.repository.BookResult
 import kotlinx.coroutines.launch
+import com.example.bookt.ui.theme.BooktTheme
 
 class ExploreFragment : Fragment() {
 
@@ -42,7 +42,7 @@ class ExploreFragment : Fragment() {
             )
 
             setContent {
-                MaterialTheme {
+                BooktTheme {
                     ExploreScreen(
                         query = query,
                         sectionTitle = sectionTitle,

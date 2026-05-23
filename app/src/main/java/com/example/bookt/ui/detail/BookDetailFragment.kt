@@ -16,7 +16,7 @@ import com.example.bookt.data.auth.AuthManager
 import com.example.bookt.data.local.BookStorageManager
 import com.example.bookt.data.model.Book
 import com.example.bookt.data.remote.FirebaseBookStorageManager
-
+import com.example.bookt.ui.theme.BooktTheme
 class BookDetailFragment : Fragment() {
 
     private lateinit var book: Book
@@ -61,22 +61,24 @@ class BookDetailFragment : Fragment() {
             )
 
             setContent {
-                BookDetailScreen(
-                    book = book,
-                    inReading = inReading,
-                    inFavorites = inFavorites,
-                    inRead = inRead,
-                    isLoadingStatus = isLoadingStatus,
-                    onReadingClick = {
-                        toggleReading()
-                    },
-                    onFavoriteClick = {
-                        toggleFavorite()
-                    },
-                    onReadClick = {
-                        toggleRead()
-                    }
-                )
+                BooktTheme {
+                    BookDetailScreen(
+                        book = book,
+                        inReading = inReading,
+                        inFavorites = inFavorites,
+                        inRead = inRead,
+                        isLoadingStatus = isLoadingStatus,
+                        onReadingClick = {
+                            toggleReading()
+                        },
+                        onFavoriteClick = {
+                            toggleFavorite()
+                        },
+                        onReadClick = {
+                            toggleRead()
+                        }
+                    )
+                }
             }
         }
     }

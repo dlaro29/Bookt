@@ -53,6 +53,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.example.bookt.data.model.Book
+import com.example.bookt.ui.theme.BooktFont
 
 @Composable
 fun ExploreScreen(
@@ -77,10 +78,10 @@ fun ExploreScreen(
                 .padding(horizontal = 18.dp, vertical = 18.dp)
         ) {
             Text(
-                text = "Esplora",
+                text = "ESPLORA",
                 color = Color.White,
                 style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.ExtraBold
             )
 
             Spacer(modifier = Modifier.height(14.dp))
@@ -101,7 +102,7 @@ fun ExploreScreen(
             Spacer(modifier = Modifier.height(18.dp))
 
             Text(
-                text = sectionTitle,
+                text = sectionTitle.uppercase(),
                 color = Color.White,
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold
@@ -241,7 +242,7 @@ private fun GenreChipsRow(
         )
 
         GenreChip(
-            text = "Manga",
+            text = "Fumetti",
             selected = selectedChip == "Manga",
             onClick = { onChipClick("Manga") }
         )
@@ -306,9 +307,10 @@ private fun ExploreBookCard(
                 Text(
                     text = book.title,
                     color = Color.White,
+                    fontFamily = BooktFont,
                     fontSize = 15.sp,
                     lineHeight = 18.sp,
-                    fontWeight = FontWeight.Bold,
+                    fontWeight = FontWeight.ExtraBold,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -318,6 +320,7 @@ private fun ExploreBookCard(
                 Text(
                     text = book.author.ifBlank { "Autore sconosciuto" },
                     color = Color(0xFFBDBDBD),
+                    fontFamily = BooktFont,
                     fontSize = 12.sp,
                     lineHeight = 15.sp,
                     maxLines = 2,
@@ -329,6 +332,7 @@ private fun ExploreBookCard(
                 Text(
                     text = book.category.ifBlank { "Senza categoria" },
                     color = Color(0xFF4CAF50),
+                    fontFamily = BooktFont,
                     fontSize = 11.sp,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
@@ -339,6 +343,7 @@ private fun ExploreBookCard(
                 Text(
                     text = book.rating?.let { "★ $it" } ?: "Rating non disponibile",
                     color = Color(0xFFDDDDDD),
+                    fontFamily = BooktFont,
                     fontSize = 11.sp,
                     maxLines = 1
                 )

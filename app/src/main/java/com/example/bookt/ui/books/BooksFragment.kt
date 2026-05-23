@@ -4,7 +4,6 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -17,7 +16,7 @@ import com.example.bookt.data.auth.AuthManager
 import com.example.bookt.data.local.BookStorageManager
 import com.example.bookt.data.model.Book
 import com.example.bookt.data.remote.FirebaseBookStorageManager
-
+import com.example.bookt.ui.theme.BooktTheme
 class BooksFragment : Fragment() {
 
     private lateinit var storageManager: BookStorageManager
@@ -47,7 +46,7 @@ class BooksFragment : Fragment() {
             )
 
             setContent {
-                MaterialTheme {
+                BooktTheme {
                     BooksScreen(
                         books = readingBooks,
                         isLoading = isLoading,

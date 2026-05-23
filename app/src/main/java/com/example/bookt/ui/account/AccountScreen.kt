@@ -52,6 +52,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.example.bookt.data.model.Book
+import com.example.bookt.ui.theme.BooktFont
 
 @Composable
 fun AccountScreen(
@@ -83,10 +84,10 @@ fun AccountScreen(
                 .padding(horizontal = 18.dp, vertical = 18.dp)
         ) {
             Text(
-                text = "Account",
+                text = "ACCOUNT",
                 color = Color.White,
                 style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.ExtraBold
             )
 
             Spacer(modifier = Modifier.height(6.dp))
@@ -131,7 +132,7 @@ fun AccountScreen(
             }
 
             BookCarouselSection(
-                title = "Preferiti",
+                title = "PREFERITI",
                 emptyMessage = "Non hai ancora aggiunto libri ai preferiti",
                 books = favoriteBooks,
                 iconType = AccountSectionIcon.FAVORITE,
@@ -141,7 +142,7 @@ fun AccountScreen(
             Spacer(modifier = Modifier.height(24.dp))
 
             BookCarouselSection(
-                title = "Letti",
+                title = "LETTI",
                 emptyMessage = "Non hai ancora segnato libri come letti",
                 books = readBooks,
                 iconType = AccountSectionIcon.READ,
@@ -301,7 +302,7 @@ private fun BookCarouselSection(
     onBookClick: (Book) -> Unit
 ) {
     Text(
-        text = title,
+        text = title.uppercase(),
         color = Color.White,
         style = MaterialTheme.typography.titleMedium,
         fontWeight = FontWeight.Bold
@@ -381,9 +382,10 @@ private fun AccountBookCard(
             Text(
                 text = book.title,
                 color = Color.White,
+                fontFamily = BooktFont,
                 fontSize = 9.sp,
                 lineHeight = 10.sp,
-                fontWeight = FontWeight.Bold,
+                fontWeight = FontWeight.ExtraBold,
                 maxLines = 4,
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier

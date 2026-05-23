@@ -45,6 +45,7 @@ import coil.compose.AsyncImage
 import com.example.bookt.data.model.Book
 import androidx.compose.ui.platform.LocalContext
 import coil.request.ImageRequest
+import com.example.bookt.ui.theme.BooktFont
 
 @Composable
 fun BookDetailScreen(
@@ -124,7 +125,7 @@ private fun BookHeader(
                 text = book.title,
                 color = Color.White,
                 style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
+                fontWeight = FontWeight.ExtraBold,
                 maxLines = 5,
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.fillMaxWidth()
@@ -283,7 +284,7 @@ private fun BookInfoSection(book: Book) {
             .fillMaxWidth()
             .padding(horizontal = 18.dp, vertical = 6.dp)
     ) {
-        InfoCard(title = "Descrizione") {
+        InfoCard(title = "DESCRIZIONE") {
             Text(
                 text = if (book.description.isNotBlank()) {
                     book.description
@@ -297,7 +298,7 @@ private fun BookInfoSection(book: Book) {
 
         Spacer(modifier = Modifier.height(14.dp))
 
-        InfoCard(title = "Informazioni libro") {
+        InfoCard(title = "INFORMAZIONI LIBRO") {
             InfoRow(label = "Categoria", value = book.category)
             InfoRow(label = "Editore", value = book.publisher.ifBlank { "-" })
             InfoRow(label = "Pubblicazione", value = book.publishedDate.ifBlank { "-" })
