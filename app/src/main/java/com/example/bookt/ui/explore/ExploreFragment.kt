@@ -1,199 +1,161 @@
 package com.example.bookt.ui.explore
 
 import android.os.Bundle
-import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.view.inputmethod.EditorInfo
 import android.widget.Toast
-import androidx.activity.OnBackPressedCallback
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
-import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.bookt.R
 import com.example.bookt.data.model.Book
 import com.example.bookt.data.repository.BookRepository
 import com.example.bookt.data.repository.BookResult
-import com.example.bookt.databinding.FragmentExploreBinding
 import kotlinx.coroutines.launch
 
 class ExploreFragment : Fragment() {
 
-    private var _binding: FragmentExploreBinding? = null
-    private val binding get() = _binding!!
-
-    private lateinit var bookAdapter: BookAdapter
-    private lateinit var homeBookAdapter: HomeBookAdapter
-
     private val repository = BookRepository()
 
-    private var homeBooks: List<Book> = emptyList()
-    private val genreCache = mutableMapOf<String, List<Book>>()
+    private var books by mutableStateOf<List<Book>>(emptyList())
+    private var query by mutableStateOf("")
+    private var sectionTitle by mutableStateOf("Esplora")
+    private var selectedChip by mutableStateOf("Tutti")
+    private var isLoading by mutableStateOf(false)
+    private var statusMessage by mutableStateOf<String?>(null)
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        _binding = FragmentExploreBinding.inflate(inflater, container, false)
-        return binding.root
-    }
+        return ComposeView(requireContext()).apply {
+            setViewCompositionStrategy(
+                ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed
+            )
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-
-        setupResultsRecyclerView()
-        setupHomeRecyclerView()
-        setupSearch()
-        setupCategoryCards()
-        setupBackPressed()
-
-        loadHomeBooks()
-    }
-
-    private fun setupResultsRecyclerView() {
-        bookAdapter = BookAdapter(emptyList()) { selectedBook ->
-            openBookDetail(selectedBook)
-        }
-
-        binding.rvBooks.layoutManager = LinearLayoutManager(requireContext())
-        binding.rvBooks.adapter = bookAdapter
-    }
-
-    private fun setupHomeRecyclerView() {
-        homeBookAdapter = HomeBookAdapter(emptyList()) { selectedBook ->
-            openBookDetail(selectedBook)
-        }
-
-        binding.rvHomeBooks.layoutManager =
-            LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
-
-        binding.rvHomeBooks.adapter = homeBookAdapter
-    }
-
-    private fun setupSearch() {
-        binding.searchInputLayout.setEndIconOnClickListener {
-            performSearch()
-        }
-
-        binding.etSearch.setOnEditorActionListener { _, actionId, event ->
-            val isSearchAction = actionId == EditorInfo.IME_ACTION_SEARCH
-            val isEnterPressed =
-                event?.keyCode == KeyEvent.KEYCODE_ENTER && event.action == KeyEvent.ACTION_DOWN
-
-            if (isSearchAction || isEnterPressed) {
-                performSearch()
-                true
-            } else {
-                false
-            }
-        }
-    }
-
-    private fun setupCategoryCards() {
-        binding.cardFantasy.setOnClickListener {
-            binding.etSearch.setText("Fantasy")
-            loadBooksByCategoryQuery("subject:fantasy", "Fantasy")
-        }
-
-        binding.cardRomance.setOnClickListener {
-            binding.etSearch.setText("Romance")
-            loadBooksByCategoryQuery("subject:romance", "Romance")
-        }
-
-        binding.cardThriller.setOnClickListener {
-            binding.etSearch.setText("Thriller")
-            loadBooksByCategoryQuery("subject:thriller", "Thriller")
-        }
-
-        binding.cardManga.setOnClickListener {
-            binding.etSearch.setText("Manga")
-            loadBooksByCategoryQuery("subject:manga", "Manga")
-        }
-    }
-
-    private fun setupBackPressed() {
-        requireActivity().onBackPressedDispatcher.addCallback(
-            viewLifecycleOwner,
-            object : OnBackPressedCallback(true) {
-                override fun handleOnBackPressed() {
-                    val isInResultsPage =
-                        binding.rvBooks.visibility == View.VISIBLE ||
-                                binding.tvStatusMessage.visibility == View.VISIBLE ||
-                                binding.tvSectionTitle.visibility == View.VISIBLE
-
-                    if (isInResultsPage) {
-                        returnToHome()
-                    } else {
-                        requireActivity().finish()
-                    }
-                }
-            }
-        )
-    }
-
-    private fun performSearch() {
-        val query = binding.etSearch.text?.toString()?.trim().orEmpty()
-
-        if (query.isBlank()) {
-            Toast.makeText(
-                requireContext(),
-                "Inserisci qualcosa da cercare",
-                Toast.LENGTH_SHORT
-            ).show()
-            return
-        }
-
-        loadBooks(query)
-    }
-
-    private fun loadHomeBooks() {
-        viewLifecycleOwner.lifecycleScope.launch {
-            showHomeLoading()
-
-            when (val result = repository.loadHomeBooks()) {
-                is BookResult.Success -> {
-                    homeBooks = result.books
-
-                    if (homeBooks.isEmpty()) {
-                        showHomeMessage(
-                            title = "Nessun risultato",
-                            message = "Non sono riuscito a caricare i libri iniziali"
-                        )
-                    } else {
-                        showHomeContent(homeBooks)
-                    }
-                }
-
-                is BookResult.Error -> {
-                    showHomeMessage(
-                        title = "Errore",
-                        message = result.message
+            setContent {
+                MaterialTheme {
+                    ExploreScreen(
+                        query = query,
+                        sectionTitle = sectionTitle,
+                        books = books,
+                        isLoading = isLoading,
+                        statusMessage = statusMessage,
+                        selectedChip = selectedChip,
+                        onQueryChange = { newQuery ->
+                            query = newQuery
+                        },
+                        onSearchClick = {
+                            performSearch()
+                        },
+                        onChipClick = { chip ->
+                            handleChipClick(chip)
+                        },
+                        onBookClick = { selectedBook ->
+                            openBookDetail(selectedBook)
+                        }
                     )
                 }
             }
         }
     }
 
-    private fun loadBooks(query: String) {
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        if (books.isEmpty() && !isLoading) {
+            loadDefaultBooks()
+        }
+    }
+    private fun handleChipClick(chip: String) {
+        selectedChip = chip
+
+        when (chip) {
+            "Tutti" -> {
+                query = ""
+                loadDefaultBooks()
+            }
+
+            "Fantasy" -> {
+                query = "Fantasy"
+                loadBooksByCategoryQuery("subject:fantasy", "Fantasy")
+            }
+
+            "Romanzi" -> {
+                query = "Romanzi"
+                loadBooksByCategoryQuery("subject:romance", "Romanzi")
+            }
+
+            "Thriller" -> {
+                query = "Thriller"
+                loadBooksByCategoryQuery("subject:thriller", "Thriller")
+            }
+
+            "Manga" -> {
+                query = "Manga"
+                loadBooksByCategoryQuery("subject:manga", "Manga")
+            }
+        }
+    }
+
+    private fun performSearch() {
+        val cleanQuery = query.trim()
+
+        if (cleanQuery.isBlank()) {
+            Toast.makeText(requireContext(), "Inserisci qualcosa da cercare", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        selectedChip = ""
+        loadBooks(cleanQuery)
+    }
+
+    private fun showLoading() {
+        isLoading = true
+        statusMessage = null
+        sectionTitle = "Caricamento..."
+        books = emptyList()
+    }
+
+    private fun showBooks(newBooks: List<Book>, title: String) {
+        isLoading = false
+        statusMessage = null
+        sectionTitle = title
+        books = newBooks
+    }
+
+    private fun showMessage(title: String, message: String) {
+        isLoading = false
+        sectionTitle = title
+        statusMessage = message
+        books = emptyList()
+    }
+
+    private fun loadDefaultBooks() {
         viewLifecycleOwner.lifecycleScope.launch {
-            showResultsLoading("Caricamento...")
+            showLoading()
 
-            when (val result = repository.searchBooks(query)) {
+            when (val result = repository.loadHomeBooks()) {
                 is BookResult.Success -> {
-                    val books = result.books
+                    val loadedBooks = result.books
 
-                    if (books.isEmpty()) {
+                    if (loadedBooks.isEmpty()) {
                         showMessage(
                             title = "Nessun risultato",
-                            message = "Non ho trovato libri per \"$query\""
+                            message = "Non sono riuscito a caricare i libri iniziali"
                         )
                     } else {
-                        showResults(
-                            books = books,
-                            title = "Risultati per \"$query\""
+                        showBooks(
+                            newBooks = loadedBooks,
+                            title = "Esplora"
                         )
                     }
                 }
@@ -208,34 +170,53 @@ class ExploreFragment : Fragment() {
         }
     }
 
-    private fun loadBooksByCategoryQuery(query: String, label: String) {
-        val cachedBooks = genreCache[label]
-
-        if (!cachedBooks.isNullOrEmpty()) {
-            showResults(
-                books = cachedBooks,
-                title = label
-            )
-            return
-        }
-
+    private fun loadBooks(searchQuery: String) {
         viewLifecycleOwner.lifecycleScope.launch {
-            showResultsLoading(label)
+            showLoading()
 
-            when (val result = repository.searchBooksForChip(query, label)) {
+            when (val result = repository.searchBooks(searchQuery)) {
                 is BookResult.Success -> {
-                    val books = result.books
+                    val loadedBooks = result.books
 
-                    if (books.isEmpty()) {
+                    if (loadedBooks.isEmpty()) {
                         showMessage(
                             title = "Nessun risultato",
-                            message = "Non ho trovato libri validi per $label"
+                            message = "Non ho trovato libri per \"$searchQuery\""
                         )
                     } else {
-                        genreCache[label] = books
+                        showBooks(
+                            newBooks = loadedBooks,
+                            title = "Risultati per \"$searchQuery\""
+                        )
+                    }
+                }
 
-                        showResults(
-                            books = books,
+                is BookResult.Error -> {
+                    showMessage(
+                        title = "Errore",
+                        message = result.message
+                    )
+                }
+            }
+        }
+    }
+
+    private fun loadBooksByCategoryQuery(apiQuery: String, label: String) {
+        viewLifecycleOwner.lifecycleScope.launch {
+            showLoading()
+
+            when (val result = repository.searchBooksForChip(apiQuery, label)) {
+                is BookResult.Success -> {
+                    val loadedBooks = result.books
+
+                    if (loadedBooks.isEmpty()) {
+                        showMessage(
+                            title = "Nessun risultato",
+                            message = "Non ho trovato libri per $label"
+                        )
+                    } else {
+                        showBooks(
+                            newBooks = loadedBooks,
                             title = label
                         )
                     }
@@ -251,79 +232,6 @@ class ExploreFragment : Fragment() {
         }
     }
 
-    private fun showHomeLoading() {
-        binding.progressBarBooks.visibility = View.VISIBLE
-        binding.homeScrollView.visibility = View.GONE
-        binding.rvBooks.visibility = View.GONE
-        binding.tvSectionTitle.visibility = View.GONE
-        binding.tvStatusMessage.visibility = View.GONE
-    }
-
-    private fun showHomeContent(books: List<Book>) {
-        binding.progressBarBooks.visibility = View.GONE
-        binding.homeScrollView.visibility = View.VISIBLE
-        binding.rvBooks.visibility = View.GONE
-        binding.tvSectionTitle.visibility = View.GONE
-        binding.tvStatusMessage.visibility = View.GONE
-
-        homeBookAdapter.updateBooks(books.take(10))
-    }
-
-    private fun showResultsLoading(title: String) {
-        binding.progressBarBooks.visibility = View.VISIBLE
-        binding.homeScrollView.visibility = View.GONE
-        binding.rvBooks.visibility = View.GONE
-        binding.tvStatusMessage.visibility = View.GONE
-        binding.tvSectionTitle.visibility = View.VISIBLE
-        binding.tvSectionTitle.text = title
-    }
-
-    private fun showResults(books: List<Book>, title: String) {
-        binding.progressBarBooks.visibility = View.GONE
-        binding.homeScrollView.visibility = View.GONE
-        binding.tvStatusMessage.visibility = View.GONE
-        binding.rvBooks.visibility = View.VISIBLE
-        binding.tvSectionTitle.visibility = View.VISIBLE
-        binding.tvSectionTitle.text = title
-
-        bookAdapter.updateBooks(books)
-    }
-
-    private fun showMessage(title: String, message: String) {
-        binding.progressBarBooks.visibility = View.GONE
-        binding.homeScrollView.visibility = View.GONE
-        binding.rvBooks.visibility = View.GONE
-        binding.tvStatusMessage.visibility = View.VISIBLE
-        binding.tvSectionTitle.visibility = View.VISIBLE
-        binding.tvSectionTitle.text = title
-        binding.tvStatusMessage.text = message
-
-        bookAdapter.updateBooks(emptyList())
-    }
-
-    private fun showHomeMessage(title: String, message: String) {
-        binding.progressBarBooks.visibility = View.GONE
-        binding.homeScrollView.visibility = View.GONE
-        binding.rvBooks.visibility = View.GONE
-        binding.tvStatusMessage.visibility = View.VISIBLE
-        binding.tvSectionTitle.visibility = View.VISIBLE
-        binding.tvSectionTitle.text = title
-        binding.tvStatusMessage.text = message
-
-        bookAdapter.updateBooks(emptyList())
-    }
-
-    private fun returnToHome() {
-        binding.etSearch.setText("")
-        bookAdapter.updateBooks(emptyList())
-
-        if (homeBooks.isNotEmpty()) {
-            showHomeContent(homeBooks)
-        } else {
-            loadHomeBooks()
-        }
-    }
-
     private fun openBookDetail(book: Book) {
         val bundle = Bundle().apply {
             putSerializable("book", book)
@@ -333,10 +241,5 @@ class ExploreFragment : Fragment() {
             R.id.action_exploreFragment_to_bookDetailFragment,
             bundle
         )
-    }
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-        _binding = null
     }
 }
