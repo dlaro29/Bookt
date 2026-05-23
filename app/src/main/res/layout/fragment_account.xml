@@ -16,6 +16,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Account"
+            android:textColor="#BDBDBD"
             android:textSize="26sp"
             android:textStyle="bold" />
 
@@ -25,7 +26,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             android:text="Accedi o registrati per salvare i tuoi libri nel cloud"
-            android:textColor="#666666"
+            android:textColor="#FFFFFF"
             android:textSize="15sp" />
 
         <com.google.android.material.textfield.TextInputLayout
@@ -89,7 +90,7 @@
             android:layout_marginTop="10dp"
             android:gravity="center"
             android:text="Caricamento libreria..."
-            android:textColor="#666666"
+            android:textColor="#FFFFFF"
             android:textSize="15sp"
             android:visibility="gone" />
 
@@ -99,6 +100,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="24dp"
             android:text="Preferiti"
+            android:textColor="#BDBDBD"
             android:textSize="20sp"
             android:textStyle="bold" />
 
@@ -108,7 +110,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             android:text="Non hai ancora aggiunto libri ai preferiti"
-            android:textColor="#666666"
+            android:textColor="#FFFFFF"
             android:textSize="15sp"
             android:visibility="gone" />
 
@@ -128,6 +130,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="24dp"
             android:text="Letti"
+            android:textColor="#BDBDBD"
             android:textSize="20sp"
             android:textStyle="bold" />
 
@@ -137,7 +140,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             android:text="Non hai ancora segnato libri come letti"
-            android:textColor="#666666"
+            android:textColor="#FFFFFF"
             android:textSize="15sp"
             android:visibility="gone" />
 

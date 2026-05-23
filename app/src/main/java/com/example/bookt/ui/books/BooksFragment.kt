@@ -4,7 +4,12 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import com.example.bookt.R
@@ -12,118 +17,84 @@ import com.example.bookt.data.auth.AuthManager
 import com.example.bookt.data.local.BookStorageManager
 import com.example.bookt.data.model.Book
 import com.example.bookt.data.remote.FirebaseBookStorageManager
-import com.example.bookt.databinding.FragmentBooksBinding
 
 class BooksFragment : Fragment() {
 
-    private var _binding: FragmentBooksBinding? = null
-    private val binding get() = _binding!!
-
-    private lateinit var readingBookAdapter: ReadingBookAdapter
     private lateinit var storageManager: BookStorageManager
     private lateinit var authManager: AuthManager
     private lateinit var firebaseStorageManager: FirebaseBookStorageManager
+
+    private var readingBooks by mutableStateOf<List<Book>>(emptyList())
+    private var isLoading by mutableStateOf(false)
+    private var errorMessage by mutableStateOf<String?>(null)
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        storageManager = BookStorageManager(requireContext())
+        authManager = AuthManager()
+        firebaseStorageManager = FirebaseBookStorageManager()
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        _binding = FragmentBooksBinding.inflate(inflater, container, false)
-        return binding.root
-    }
+        return ComposeView(requireContext()).apply {
+            setViewCompositionStrategy(
+                ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed
+            )
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-
-        storageManager = BookStorageManager(requireContext())
-        authManager = AuthManager()
-        firebaseStorageManager = FirebaseBookStorageManager()
-
-        setupRecyclerView()
-        loadReadingBooks()
+            setContent {
+                MaterialTheme {
+                    BooksScreen(
+                        books = readingBooks,
+                        isLoading = isLoading,
+                        errorMessage = errorMessage,
+                        onBookClick = { selectedBook ->
+                            openBookDetail(selectedBook)
+                        }
+                    )
+                }
+            }
+        }
     }
 
     override fun onResume() {
         super.onResume()
-
-        if (::authManager.isInitialized && ::readingBookAdapter.isInitialized) {
-            loadReadingBooks()
-        }
-    }
-
-    private fun setupRecyclerView() {
-        readingBookAdapter = ReadingBookAdapter(
-            emptyList(),
-            onBookClick = { selectedBook ->
-                openBookDetail(selectedBook)
-            }
-        )
-
-        binding.rvReadingBooks.layoutManager =
-            androidx.recyclerview.widget.GridLayoutManager(requireContext(), 3)
-
-        binding.rvReadingBooks.adapter = readingBookAdapter
+        loadReadingBooks()
     }
 
     private fun loadReadingBooks() {
-        showReadingLoading()
+        isLoading = true
+        errorMessage = null
 
         if (authManager.isUserLoggedIn()) {
             firebaseStorageManager.getBooksByStatus(
                 statusField = "inReading",
-                onSuccess = { readingBooks ->
-                    if (_binding != null) {
-                        updateReadingUi(readingBooks)
-                    }
+                onSuccess = { books ->
+                    if (!isAdded) return@getBooksByStatus
+
+                    readingBooks = books
+                    isLoading = false
+                    errorMessage = null
                 },
                 onError = { message ->
-                    if (isAdded && _binding != null) {
-                        showReadingError(message)
-                    }
+                    if (!isAdded) return@getBooksByStatus
+
+                    readingBooks = emptyList()
+                    isLoading = false
+                    errorMessage = message
                 }
             )
         } else {
-            val readingBooks = storageManager.getReadingBooks()
-            updateReadingUi(readingBooks)
+            readingBooks = storageManager.getReadingBooks()
+            isLoading = false
+            errorMessage = null
         }
     }
 
-    private fun showReadingLoading() {
-        val safeBinding = _binding ?: return
-
-        safeBinding.progressBarReading.visibility = View.VISIBLE
-        safeBinding.tvReadingStatus.visibility = View.GONE
-        safeBinding.tvEmptyReading.visibility = View.GONE
-        safeBinding.rvReadingBooks.visibility = View.GONE
-    }
-
-    private fun showReadingError(message: String) {
-        val safeBinding = _binding ?: return
-
-        safeBinding.progressBarReading.visibility = View.GONE
-        safeBinding.tvReadingStatus.visibility = View.VISIBLE
-        safeBinding.tvReadingStatus.text = message
-        safeBinding.tvEmptyReading.visibility = View.GONE
-        safeBinding.rvReadingBooks.visibility = View.GONE
-        readingBookAdapter.updateBooks(emptyList())
-    }
-    private fun updateReadingUi(readingBooks: List<Book>) {
-        val safeBinding = _binding ?: return
-
-        safeBinding.progressBarReading.visibility = View.GONE
-        safeBinding.tvReadingStatus.visibility = View.GONE
-
-        if (readingBooks.isEmpty()) {
-            safeBinding.tvEmptyReading.visibility = View.VISIBLE
-            safeBinding.rvReadingBooks.visibility = View.GONE
-            readingBookAdapter.updateBooks(emptyList())
-        } else {
-            safeBinding.tvEmptyReading.visibility = View.GONE
-            safeBinding.rvReadingBooks.visibility = View.VISIBLE
-            readingBookAdapter.updateBooks(readingBooks)
-        }
-    }
     private fun openBookDetail(book: Book) {
         val bundle = Bundle().apply {
             putSerializable("book", book)
@@ -134,10 +105,5 @@ class BooksFragment : Fragment() {
             R.id.bookDetailFragment,
             bundle
         )
-    }
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-        _binding = null
     }
 }
