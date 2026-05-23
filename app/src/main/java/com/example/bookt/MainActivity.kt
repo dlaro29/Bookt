@@ -1,12 +1,12 @@
 package com.example.bookt
 
+import android.graphics.Color
+import android.os.Build
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.setupWithNavController
 import com.example.bookt.databinding.ActivityMainBinding
-import android.graphics.Color
-import android.os.Build
 
 //modifica delle schermate e navigazione
 class MainActivity : AppCompatActivity() {
