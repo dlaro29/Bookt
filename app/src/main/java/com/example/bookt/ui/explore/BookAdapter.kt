@@ -18,9 +18,11 @@ class BookAdapter(
         fun bind(book: Book) {
             binding.tvBookTitle.text = book.title
             binding.tvBookAuthor.text = book.author
-            binding.tvBookCategory.text = book.category
+            binding.tvBookCategory.text =
+                if (book.category.isNotBlank()) book.category else "Senza categoria"
+
             binding.tvBookRating.text =
-                book.rating?.let { "Rating: $it" } ?: "Rating non disponibile"
+                book.rating?.let { "★ $it" } ?: "Rating non disponibile"
 
             if (book.thumbnailUrl.isNotEmpty()) {
                 Glide.with(binding.root.context)

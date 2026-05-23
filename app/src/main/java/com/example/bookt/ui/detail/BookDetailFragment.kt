@@ -45,6 +45,9 @@ class BookDetailFragment : Fragment() {
         storageManager = BookStorageManager(requireContext())
         authManager = AuthManager()
         firebaseStorageManager = FirebaseBookStorageManager()
+        inReading = arguments?.getBoolean("opened_from_reading") ?: false
+        inFavorites = arguments?.getBoolean("opened_from_favorites") ?: false
+        inRead = arguments?.getBoolean("opened_from_read") ?: false
     }
 
     override fun onCreateView(

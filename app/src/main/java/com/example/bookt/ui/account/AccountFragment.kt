@@ -153,87 +153,49 @@ class AccountFragment : Fragment() {
         favoritesAdapter = SavedBookAdapter(
             emptyList(),
             onBookClick = { selectedBook ->
-                openBookDetail(selectedBook)
-            },
-            onRemoveClick = { selectedBook ->
-                removeFavoriteBook(selectedBook)
+                openBookDetail(
+                    book = selectedBook,
+                    openedFromFavorites = true
+                )
             }
         )
 
         readAdapter = SavedBookAdapter(
             emptyList(),
             onBookClick = { selectedBook ->
-                openBookDetail(selectedBook)
-            },
-            onRemoveClick = { selectedBook ->
-                removeReadBook(selectedBook)
+                openBookDetail(
+                    book = selectedBook,
+                    openedFromRead = true
+                )
             }
         )
 
         binding.rvFavoriteBooks.layoutManager =
-            androidx.recyclerview.widget.GridLayoutManager(requireContext(), 3)
+            androidx.recyclerview.widget.LinearLayoutManager(
+                requireContext(),
+                androidx.recyclerview.widget.LinearLayoutManager.HORIZONTAL,
+                false
+            )
         binding.rvFavoriteBooks.adapter = favoritesAdapter
 
         binding.rvReadBooks.layoutManager =
-            androidx.recyclerview.widget.GridLayoutManager(requireContext(), 3)
+            androidx.recyclerview.widget.LinearLayoutManager(
+                requireContext(),
+                androidx.recyclerview.widget.LinearLayoutManager.HORIZONTAL,
+                false
+            )
         binding.rvReadBooks.adapter = readAdapter
     }
 
-    private fun removeFavoriteBook(selectedBook: Book) {
-        if (authManager.isUserLoggedIn()) {
-            showAccountLoading()
-
-            firebaseStorageManager.saveBookStatus(
-                book = selectedBook,
-                inFavorites = false,
-                onSuccess = {
-                    if (_binding != null && isAdded) {
-                        Toast.makeText(requireContext(), "Rimosso dai Preferiti", Toast.LENGTH_SHORT).show()
-                        loadSavedBooks()
-                    }
-                },
-                onError = { message ->
-                    if (_binding != null && isAdded) {
-                        showAccountError(message)
-                    }
-                }
-            )
-        } else {
-            storageManager.removeFromFavorites(selectedBook.id)
-            Toast.makeText(requireContext(), "Rimosso dai Preferiti", Toast.LENGTH_SHORT).show()
-            loadSavedBooks()
-        }
-    }
-
-    private fun removeReadBook(selectedBook: Book) {
-        if (authManager.isUserLoggedIn()) {
-            showAccountLoading()
-
-            firebaseStorageManager.saveBookStatus(
-                book = selectedBook,
-                inRead = false,
-                onSuccess = {
-                    if (_binding != null && isAdded) {
-                        Toast.makeText(requireContext(), "Rimosso dai Letti", Toast.LENGTH_SHORT).show()
-                        loadSavedBooks()
-                    }
-                },
-                onError = { message ->
-                    if (_binding != null && isAdded) {
-                        showAccountError(message)
-                    }
-                }
-            )
-        } else {
-            storageManager.removeFromRead(selectedBook.id)
-            Toast.makeText(requireContext(), "Rimosso dai Letti", Toast.LENGTH_SHORT).show()
-            loadSavedBooks()
-        }
-    }
-
-    private fun openBookDetail(book: Book) {
+    private fun openBookDetail(
+        book: Book,
+        openedFromFavorites: Boolean = false,
+        openedFromRead: Boolean = false
+    ) {
         val bundle = Bundle().apply {
             putSerializable("book", book)
+            putBoolean("opened_from_favorites", openedFromFavorites)
+            putBoolean("opened_from_read", openedFromRead)
         }
 
         findNavController().navigate(

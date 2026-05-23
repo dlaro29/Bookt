@@ -115,8 +115,10 @@
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rvFavoriteBooks"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="200dp"
             android:layout_marginTop="12dp"
+            android:clipToPadding="false"
+            android:paddingEnd="16dp"
             android:nestedScrollingEnabled="false"
             tools:listitem="@layout/item_saved_book" />
 
@@ -142,8 +144,10 @@
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rvReadBooks"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="200dp"
             android:layout_marginTop="12dp"
+            android:clipToPadding="false"
+            android:paddingEnd="16dp"
             android:nestedScrollingEnabled="false"
             tools:listitem="@layout/item_saved_book" />
 

@@ -8,16 +8,17 @@ import com.example.bookt.data.model.Book
 import com.example.bookt.databinding.ItemSavedBookBinding
 class SavedBookAdapter(
     private var books: List<Book>,
-    private val onBookClick: (Book) -> Unit,
-    private val onRemoveClick: (Book) -> Unit
+    private val onBookClick: (Book) -> Unit
 ) : RecyclerView.Adapter<SavedBookAdapter.SavedBookViewHolder>() {
     inner class SavedBookViewHolder(private val binding: ItemSavedBookBinding) :
         RecyclerView.ViewHolder(binding.root) {
-            //collega i dati del libri salvato
+            //collega i dati dei libri salvato
         fun bind(book: Book) {
-            binding.tvSavedBookTitle.text = book.title
-            binding.tvSavedBookAuthor.text = book.author
-            binding.tvSavedBookCategory.text = book.category
+                binding.tvSavedBookTitle.text = book.title
+                binding.tvSavedBookAuthor.text =
+                    if (book.author.isNotBlank()) book.author else "Autore sconosciuto"
+                binding.tvSavedBookCategory.text =
+                    if (book.category.isNotBlank()) book.category else "Senza categoria"
 
             if (book.thumbnailUrl.isNotEmpty()) {
                 Glide.with(binding.root.context)
@@ -29,10 +30,6 @@ class SavedBookAdapter(
 
             binding.root.setOnClickListener {
                 onBookClick(book)
-            }
-
-            binding.btnRemoveSavedBook.setOnClickListener {
-                onRemoveClick(book)
             }
         }
     }

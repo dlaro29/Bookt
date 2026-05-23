@@ -57,9 +57,6 @@ class BooksFragment : Fragment() {
             emptyList(),
             onBookClick = { selectedBook ->
                 openBookDetail(selectedBook)
-            },
-            onRemoveClick = { selectedBook ->
-                removeReadingBook(selectedBook)
             }
         )
 
@@ -92,40 +89,6 @@ class BooksFragment : Fragment() {
         }
     }
 
-    private fun removeReadingBook(selectedBook: Book) {
-        if (authManager.isUserLoggedIn()) {
-            showLoading()
-
-            firebaseStorageManager.saveBookStatus(
-                book = selectedBook,
-                inReading = false,
-                onSuccess = {
-                    if (_binding != null && isAdded) {
-                        Toast.makeText(
-                            requireContext(),
-                            "Rimosso da Da leggere",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                        loadReadingBooks()
-                    }
-                },
-                onError = { message ->
-                    if (_binding != null && isAdded) {
-                        showError(message)
-                    }
-                }
-            )
-        } else {
-            storageManager.removeFromReading(selectedBook.id)
-            Toast.makeText(
-                requireContext(),
-                "Rimosso da Da leggere",
-                Toast.LENGTH_SHORT
-            ).show()
-            loadReadingBooks()
-        }
-    }
-
     private fun showReadingLoading() {
         val safeBinding = _binding ?: return
 
@@ -145,27 +108,6 @@ class BooksFragment : Fragment() {
         safeBinding.rvReadingBooks.visibility = View.GONE
         readingBookAdapter.updateBooks(emptyList())
     }
-    private fun showLoading() {
-        val safeBinding = _binding ?: return
-
-        safeBinding.progressBarReading.visibility = View.VISIBLE
-        safeBinding.tvReadingStatus.visibility = View.VISIBLE
-        safeBinding.tvReadingStatus.text = "Caricamento libri..."
-        safeBinding.tvEmptyReading.visibility = View.GONE
-        safeBinding.rvReadingBooks.visibility = View.GONE
-    }
-
-    private fun showError(message: String) {
-        val safeBinding = _binding ?: return
-
-        safeBinding.progressBarReading.visibility = View.GONE
-        safeBinding.rvReadingBooks.visibility = View.GONE
-        safeBinding.tvEmptyReading.visibility = View.GONE
-        safeBinding.tvReadingStatus.visibility = View.VISIBLE
-        safeBinding.tvReadingStatus.text = message
-        readingBookAdapter.updateBooks(emptyList())
-    }
-
     private fun updateReadingUi(readingBooks: List<Book>) {
         val safeBinding = _binding ?: return
 
@@ -182,7 +124,6 @@ class BooksFragment : Fragment() {
             readingBookAdapter.updateBooks(readingBooks)
         }
     }
-
     private fun openBookDetail(book: Book) {
         val bundle = Bundle().apply {
             putSerializable("book", book)

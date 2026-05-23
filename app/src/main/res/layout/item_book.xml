@@ -3,31 +3,38 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="12dp"
-    android:backgroundTint="#181818"
-    app:cardCornerRadius="18dp"
+    android:layout_marginBottom="14dp"
+    app:cardCornerRadius="22dp"
     app:cardElevation="2dp"
     app:strokeWidth="1dp"
-    app:strokeColor="#26FFFFFF">
+    app:strokeColor="#12000000"
+    app:cardBackgroundColor="#FFFFFF">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:padding="10dp">
+        android:padding="12dp">
 
-        <ImageView
-            android:id="@+id/imgBookCover"
-            android:layout_width="74dp"
-            android:layout_height="112dp"
-            android:contentDescription="Copertina libro"
-            android:scaleType="centerCrop"
-            android:src="@android:drawable/ic_menu_report_image" />
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="82dp"
+            android:layout_height="124dp"
+            app:cardCornerRadius="14dp"
+            app:cardElevation="0dp">
+
+            <ImageView
+                android:id="@+id/imgBookCover"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:contentDescription="Copertina libro"
+                android:scaleType="centerCrop"
+                android:src="@android:drawable/ic_menu_report_image" />
+        </com.google.android.material.card.MaterialCardView>
 
         <LinearLayout
             android:layout_width="0dp"
-            android:layout_height="112dp"
-            android:layout_marginStart="12dp"
+            android:layout_height="124dp"
+            android:layout_marginStart="14dp"
             android:layout_weight="1"
             android:orientation="vertical">
 
@@ -35,10 +42,11 @@
                 android:id="@+id/tvBookTitle"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:ellipsize="end"
                 android:maxLines="2"
                 android:text="Titolo libro"
-                android:textColor="@android:color/white"
-                android:textSize="15sp"
+                android:textColor="#1F1F1F"
+                android:textSize="16sp"
                 android:textStyle="bold" />
 
             <TextView
@@ -46,32 +54,46 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="5dp"
+                android:ellipsize="end"
                 android:maxLines="2"
                 android:text="Autore"
-                android:textColor="#B3FFFFFF"
+                android:textColor="#666666"
                 android:textSize="13sp" />
 
-            <TextView
-                android:id="@+id/tvBookCategory"
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:background="#2A2A2A"
-                android:paddingStart="8dp"
-                android:paddingTop="3dp"
-                android:paddingEnd="8dp"
-                android:paddingBottom="3dp"
-                android:text="Categoria"
-                android:textColor="#E6FFFFFF"
-                android:textSize="11sp" />
+                android:layout_marginTop="9dp"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/tvBookCategory"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="#EFE7DC"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:paddingStart="9dp"
+                    android:paddingTop="4dp"
+                    android:paddingEnd="9dp"
+                    android:paddingBottom="4dp"
+                    android:text="Categoria"
+                    android:textColor="#6D4C41"
+                    android:textSize="11sp" />
+
+            </LinearLayout>
+
+            <Space
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1" />
 
             <TextView
                 android:id="@+id/tvBookRating"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:text="Rating: 4.5"
-                android:textColor="#B3FFFFFF"
+                android:text="★ 4.5"
+                android:textColor="#444444"
                 android:textSize="12sp" />
 
         </LinearLayout>
