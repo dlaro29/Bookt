@@ -28,4 +28,9 @@
         android:id="@+id/bookDetailFragment"
         android:name="com.example.bookt.ui.detail.BookDetailFragment"
         android:label="Dettaglio libro" />
+
+    <fragment
+        android:id="@+id/savedBooksListFragment"
+        android:name="com.example.bookt.ui.account.SavedBooksListFragment"
+        android:label="Lista libri salvati" />
 </navigation>

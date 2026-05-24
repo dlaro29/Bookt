@@ -238,6 +238,137 @@ class BookRepository {
         }
     }
 
+    suspend fun recommendBooksFrom(userBooks: List<Book>): BookResult {
+        if (userBooks.isEmpty()) {
+            return BookResult.Error("Aggiungi libri ai preferiti o ai letti per ricevere consigli personalizzati")
+        }
+
+        return try {
+            val allResults = linkedMapOf<String, Book>()
+            val userBookIds = userBooks.map { it.id }.toSet()
+
+            val referenceBooks = userBooks
+                .distinctBy { it.id }
+                .takeLast(10)
+
+            val favoriteCategories = referenceBooks
+                .flatMap { it.category.split(",") }
+                .map { it.trim() }
+                .filter {
+                    it.isNotBlank() &&
+                            it.lowercase() != "senza categoria"
+                }
+                .groupingBy { it }
+                .eachCount()
+                .entries
+                .sortedByDescending { it.value }
+                .map { it.key }
+                .take(2)
+
+            val favoriteAuthors = referenceBooks
+                .flatMap { it.author.split(",") }
+                .map { it.trim() }
+                .filter {
+                    it.isNotBlank() &&
+                            it.lowercase() != "autore sconosciuto"
+                }
+                .groupingBy { it }
+                .eachCount()
+                .entries
+                .sortedByDescending { it.value }
+                .map { it.key }
+                .take(1)
+
+            val queriesToTry = mutableListOf<String>()
+
+            favoriteCategories.forEach { category ->
+                queriesToTry.add("subject:$category")
+                queriesToTry.add("$category fiction")
+            }
+
+            favoriteAuthors.forEach { author ->
+                queriesToTry.add("inauthor:$author")
+            }
+
+            if (queriesToTry.isEmpty()) {
+                return BookResult.Error("Non ho abbastanza informazioni sui tuoi libri per generare consigli")
+            }
+
+            val startIndexes = listOf(0, 20, 40).shuffled().take(2)
+
+            for (apiQuery in queriesToTry.distinct().take(5)) {
+                for (startIndex in startIndexes) {
+                    val response = RetrofitInstance.api.searchBooks(
+                        query = apiQuery,
+                        maxResults = 15,
+                        startIndex = startIndex
+                    )
+
+                    val body = response.body()
+
+                    if (!response.isSuccessful) {
+                        continue
+                    }
+
+                    if (!body?.items.isNullOrEmpty()) {
+                        val books = body.items!!.mapNotNull { item ->
+                            val info = item.volumeInfo ?: return@mapNotNull null
+
+                            Book(
+                                id = item.id ?: "",
+                                title = info.title ?: "Titolo non disponibile",
+                                author = info.authors?.joinToString(", ") ?: "Autore sconosciuto",
+                                category = info.categories?.joinToString(", ") ?: "Senza categoria",
+                                thumbnailUrl = info.imageLinks?.thumbnail?.replace("http://", "https://") ?: "",
+                                description = info.description ?: "",
+                                rating = info.averageRating,
+                                publisher = info.publisher ?: "",
+                                publishedDate = info.publishedDate ?: "",
+                                pageCount = info.pageCount
+                            )
+                        }
+
+                        books
+                            .filter { book ->
+                                book.id.isNotBlank() &&
+                                        !userBookIds.contains(book.id) &&
+                                        isGoodCandidate(book)
+                            }
+                            .forEach { book ->
+                                allResults[book.id] = book
+                            }
+                    }
+                }
+            }
+
+            val scoredBooks = allResults.values
+                .map { book ->
+                    book to recommendationScore(
+                        book = book,
+                        favoriteAuthors = favoriteAuthors,
+                        favoriteCategories = favoriteCategories
+                    )
+                }
+                .filter { (_, score) -> score >= 4 }
+                .sortedWith(
+                    compareByDescending<Pair<Book, Int>> { it.second }
+                        .thenByDescending { it.first.rating ?: -1.0 }
+                        .thenByDescending { it.first.description.length }
+                        .thenBy { it.first.title }
+                )
+                .map { it.first }
+
+            val finalBooks = diversifyByAuthor(scoredBooks).take(30)
+
+            if (finalBooks.isEmpty()) {
+                BookResult.Error("Non sono riuscito a trovare consigli adatti ai tuoi libri")
+            } else {
+                BookResult.Success(finalBooks)
+            }
+        } catch (e: Exception) {
+            BookResult.Error("Errore durante il caricamento dei consigli")
+        }
+    }
     private fun rankFreeSearch(query: String, books: List<Book>): List<Book> {
         val words = query.lowercase().split(" ").filter { it.isNotBlank() }
 
@@ -568,5 +699,68 @@ class BookRepository {
         }
 
         return score >= 2
+    }
+    private fun recommendationScore(
+        book: Book,
+        favoriteAuthors: List<String>,
+        favoriteCategories: List<String>
+    ): Int {
+        val bookAuthor = book.author.lowercase()
+        val bookCategory = book.category.lowercase()
+        val bookTitle = book.title.lowercase()
+        val bookDescription = book.description.lowercase()
+
+        var score = 0
+
+        favoriteCategories.forEach { category ->
+            val cleanCategory = category.lowercase()
+
+            if (bookCategory.contains(cleanCategory)) score += 8
+            if (bookDescription.contains(cleanCategory)) score += 3
+            if (bookTitle.contains(cleanCategory)) score += 2
+        }
+
+        favoriteAuthors.forEach { author ->
+            val cleanAuthor = author.lowercase()
+
+            if (bookAuthor.contains(cleanAuthor)) score += 3
+        }
+
+        if (book.rating != null) score += 2
+        if (book.thumbnailUrl.isNotBlank()) score += 2
+        if (book.description.length > 80) score += 1
+
+        return score
+    }
+
+    private fun diversifyByAuthor(books: List<Book>): List<Book> {
+        val result = mutableListOf<Book>()
+        val authorCounts = mutableMapOf<String, Int>()
+
+        for (book in books) {
+            val mainAuthor = book.author
+                .split(",")
+                .firstOrNull()
+                ?.trim()
+                ?.lowercase()
+                ?: "unknown"
+
+            val currentCount = authorCounts[mainAuthor] ?: 0
+
+            if (currentCount < 2) {
+                result.add(book)
+                authorCounts[mainAuthor] = currentCount + 1
+            }
+        }
+
+        if (result.size < 30) {
+            val existingIds = result.map { it.id }.toSet()
+
+            books
+                .filter { it.id !in existingIds }
+                .forEach { result.add(it) }
+        }
+
+        return result
     }
 }

@@ -57,35 +57,45 @@ class AccountFragment : Fragment() {
             )
 
             setContent {
-                BooktTheme {
-                    AccountScreen(
-                        isLoggedIn = isLoggedIn,
-                        userEmail = userEmail,
-                        email = email,
-                        password = password,
-                        favoriteBooks = favoriteBooks,
-                        readBooks = readBooks,
-                        isLoading = isLoading,
-                        errorMessage = errorMessage,
-                        onEmailChange = { email = it },
-                        onPasswordChange = { password = it },
-                        onLoginClick = { login() },
-                        onRegisterClick = { register() },
-                        onLogoutClick = { logout() },
-                        onFavoriteBookClick = { selectedBook ->
-                            openBookDetail(
-                                book = selectedBook,
-                                openedFromFavorites = true
-                            )
-                        },
-                        onReadBookClick = { selectedBook ->
-                            openBookDetail(
-                                book = selectedBook,
-                                openedFromRead = true
-                            )
-                        }
-                    )
-                }
+                AccountScreen(
+                    isLoggedIn = isLoggedIn,
+                    userEmail = userEmail,
+                    email = email,
+                    password = password,
+                    favoriteBooks = favoriteBooks,
+                    readBooks = readBooks,
+                    isLoading = isLoading,
+                    errorMessage = errorMessage,
+                    onEmailChange = { email = it },
+                    onPasswordChange = { password = it },
+                    onLoginClick = { login() },
+                    onRegisterClick = { register() },
+                    onLogoutClick = { logout() },
+                    onFavoriteBookClick = { selectedBook ->
+                        openBookDetail(
+                            book = selectedBook,
+                            openedFromFavorites = true
+                        )
+                    },
+                    onReadBookClick = { selectedBook ->
+                        openBookDetail(
+                            book = selectedBook,
+                            openedFromRead = true
+                        )
+                    },
+                    onSeeAllFavoritesClick = {
+                        openSavedBooksList(
+                            type = "favorites",
+                            title = "Preferiti"
+                        )
+                    },
+                    onSeeAllReadClick = {
+                        openSavedBooksList(
+                            type = "read",
+                            title = "Letti"
+                        )
+                    }
+                )
             }
         }
     }
@@ -135,6 +145,20 @@ class AccountFragment : Fragment() {
         )
     }
 
+    private fun openSavedBooksList(
+        type: String,
+        title: String
+    ) {
+        val bundle = Bundle().apply {
+            putString("type", type)
+            putString("title", title)
+        }
+
+        findNavController().navigate(
+            R.id.savedBooksListFragment,
+            bundle
+        )
+    }
     private fun register() {
         val cleanEmail = email.trim()
         val cleanPassword = password.trim()

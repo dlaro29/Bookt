@@ -70,7 +70,9 @@ fun AccountScreen(
     onRegisterClick: () -> Unit,
     onLogoutClick: () -> Unit,
     onFavoriteBookClick: (Book) -> Unit,
-    onReadBookClick: (Book) -> Unit
+    onReadBookClick: (Book) -> Unit,
+    onSeeAllFavoritesClick: () -> Unit,
+    onSeeAllReadClick: () -> Unit
 ) {
     Box(
         modifier = Modifier
@@ -131,22 +133,26 @@ fun AccountScreen(
                 Spacer(modifier = Modifier.height(14.dp))
             }
 
-            BookCarouselSection(
+            BookPreviewSection(
                 title = "PREFERITI",
                 emptyMessage = "Non hai ancora aggiunto libri ai preferiti",
-                books = favoriteBooks,
+                books = favoriteBooks.take(3),
+                totalCount = favoriteBooks.size,
                 iconType = AccountSectionIcon.FAVORITE,
-                onBookClick = onFavoriteBookClick
+                onBookClick = onFavoriteBookClick,
+                onSeeAllClick = onSeeAllFavoritesClick
             )
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            BookCarouselSection(
+            BookPreviewSection(
                 title = "LETTI",
                 emptyMessage = "Non hai ancora segnato libri come letti",
-                books = readBooks,
+                books = readBooks.take(3),
+                totalCount = readBooks.size,
                 iconType = AccountSectionIcon.READ,
-                onBookClick = onReadBookClick
+                onBookClick = onReadBookClick,
+                onSeeAllClick = onSeeAllReadClick
             )
 
             Spacer(modifier = Modifier.height(22.dp))
@@ -294,19 +300,37 @@ private fun LoggedAccountCard(
 }
 
 @Composable
-private fun BookCarouselSection(
+private fun BookPreviewSection(
     title: String,
     emptyMessage: String,
     books: List<Book>,
+    totalCount: Int,
     iconType: AccountSectionIcon,
-    onBookClick: (Book) -> Unit
+    onBookClick: (Book) -> Unit,
+    onSeeAllClick: () -> Unit
 ) {
-    Text(
-        text = title.uppercase(),
-        color = Color.White,
-        style = MaterialTheme.typography.titleMedium,
-        fontWeight = FontWeight.Bold
-    )
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = title.uppercase(),
+            color = Color.White,
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.ExtraBold,
+            modifier = Modifier.weight(1f)
+        )
+
+        if (totalCount > 3) {
+            Text(
+                text = "VEDI TUTTI ›",
+                color = Color(0xFF4CAF50),
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.ExtraBold,
+                modifier = Modifier.clickable { onSeeAllClick() }
+            )
+        }
+    }
 
     Spacer(modifier = Modifier.height(10.dp))
 
@@ -326,15 +350,12 @@ private fun BookCarouselSection(
             ) { book ->
                 AccountBookCard(
                     book = book,
-                    onClick = {
-                        onBookClick(book)
-                    }
+                    onClick = { onBookClick(book) }
                 )
             }
         }
     }
 }
-
 @Composable
 private fun AccountBookCard(
     book: Book,

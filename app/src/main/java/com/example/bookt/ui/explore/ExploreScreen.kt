@@ -224,6 +224,12 @@ private fun GenreChipsRow(
         )
 
         GenreChip(
+            text = "Consigliati",
+            selected = selectedChip == "Consigliati",
+            onClick = { onChipClick("Consigliati") }
+        )
+
+        GenreChip(
             text = "Fantasy",
             selected = selectedChip == "Fantasy",
             onClick = { onChipClick("Fantasy") }

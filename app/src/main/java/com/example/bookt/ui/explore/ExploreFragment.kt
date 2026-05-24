@@ -19,6 +19,9 @@ import com.example.bookt.data.repository.BookRepository
 import com.example.bookt.data.repository.BookResult
 import kotlinx.coroutines.launch
 import com.example.bookt.ui.theme.BooktTheme
+import com.example.bookt.data.auth.AuthManager
+import com.example.bookt.data.local.BookStorageManager
+import com.example.bookt.data.remote.FirebaseBookStorageManager
 
 class ExploreFragment : Fragment() {
 
@@ -30,6 +33,19 @@ class ExploreFragment : Fragment() {
     private var selectedChip by mutableStateOf("Tutti")
     private var isLoading by mutableStateOf(false)
     private var statusMessage by mutableStateOf<String?>(null)
+    private lateinit var storageManager: BookStorageManager
+    private lateinit var authManager: AuthManager
+    private lateinit var firebaseStorageManager: FirebaseBookStorageManager
+    private var recommendedBooksCache: List<Book> = emptyList()
+    private var recommendedSourceIdsCache: Set<String> = emptySet()
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        storageManager = BookStorageManager(requireContext())
+        authManager = AuthManager()
+        firebaseStorageManager = FirebaseBookStorageManager()
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -84,6 +100,11 @@ class ExploreFragment : Fragment() {
                 loadDefaultBooks()
             }
 
+            "Consigliati" -> {
+                query = ""
+                loadRecommendedBooks()
+            }
+
             "Fantasy" -> {
                 query = "Fantasy"
                 loadBooksByCategoryQuery("subject:fantasy", "Fantasy")
@@ -106,6 +127,114 @@ class ExploreFragment : Fragment() {
         }
     }
 
+    private fun loadRecommendedBooks() {
+        showLoading()
+        sectionTitle = "CONSIGLIATI"
+
+        if (authManager.isUserLoggedIn()) {
+            val collectedBooks = mutableListOf<Book>()
+            var pendingLoads = 2
+
+            fun completeLoad() {
+                pendingLoads--
+
+                if (pendingLoads <= 0) {
+                    loadRecommendedBooksFrom(collectedBooks)
+                }
+            }
+
+            firebaseStorageManager.getBooksByStatus(
+                statusField = "inFavorites",
+                onSuccess = { books ->
+                    if (!isAdded) return@getBooksByStatus
+
+                    collectedBooks.addAll(books)
+                    completeLoad()
+                },
+                onError = { message ->
+                    if (!isAdded) return@getBooksByStatus
+
+                    statusMessage = message
+                    completeLoad()
+                }
+            )
+
+            firebaseStorageManager.getBooksByStatus(
+                statusField = "inRead",
+                onSuccess = { books ->
+                    if (!isAdded) return@getBooksByStatus
+
+                    collectedBooks.addAll(books)
+                    completeLoad()
+                },
+                onError = { message ->
+                    if (!isAdded) return@getBooksByStatus
+
+                    statusMessage = message
+                    completeLoad()
+                }
+            )
+        } else {
+            val localBooks = storageManager.getFavoriteBooks() + storageManager.getReadBooks()
+            loadRecommendedBooksFrom(localBooks)
+        }
+    }
+    private fun loadRecommendedBooksFrom(userBooks: List<Book>) {
+        val uniqueUserBooks = userBooks.distinctBy { it.id }
+        val currentSourceIds = uniqueUserBooks.map { it.id }.toSet()
+
+        if (
+            recommendedBooksCache.isNotEmpty() &&
+            recommendedSourceIdsCache == currentSourceIds
+        ) {
+            showBooks(
+                newBooks = recommendedBooksCache,
+                title = "CONSIGLIATI"
+            )
+            return
+        }
+
+        if (uniqueUserBooks.isEmpty()) {
+            showMessage(
+                title = "CONSIGLIATI",
+                message = "Aggiungi libri ai preferiti o ai letti per ricevere consigli personalizzati."
+            )
+            return
+        }
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            showLoading()
+            sectionTitle = "CONSIGLIATI"
+
+            when (val result = repository.recommendBooksFrom(uniqueUserBooks)) {
+                is BookResult.Success -> {
+                    val recommendedBooks = result.books
+
+                    if (recommendedBooks.isEmpty()) {
+                        showMessage(
+                            title = "CONSIGLIATI",
+                            message = "Non ho trovato consigli adatti ai tuoi libri."
+                        )
+                    } else {
+                        recommendedBooksCache = recommendedBooks
+                        recommendedSourceIdsCache = currentSourceIds
+
+                        showBooks(
+                            newBooks = recommendedBooks,
+                            title = "CONSIGLIATI"
+                        )
+                    }
+                }
+
+                is BookResult.Error -> {
+                    showMessage(
+                        title = "CONSIGLIATI",
+                        message = result.message
+                    )
+                }
+            }
+        }
+    }
     private fun performSearch() {
         val cleanQuery = query.trim()
 
